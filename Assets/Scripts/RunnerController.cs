@@ -2,14 +2,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class RunnerController : MonoBehaviour
 {
     private Rigidbody _rigidbody;
     private bool _isJumped;
     private bool _isDashed;
-
+    private float _horizontalSpeed;
+    
     [SerializeField] private float moveSpeed = 3.0f;
+    [SerializeField] private float airSpeed = 0.5f;
     [SerializeField] private float jumpSpeed = 1.0f;
     [SerializeField] private float dashSpeed = 3.0f;
     
@@ -19,6 +22,7 @@ public class RunnerController : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
         _isJumped = false;
         _isDashed = false;
+        _horizontalSpeed = moveSpeed;
     }
 
     // Update is called once per frame
@@ -29,11 +33,8 @@ public class RunnerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!_isJumped)
-        {
-            Move();
-        }
-        
+        Move();
+
         if (Input.GetKeyDown(KeyCode.Space) && !_isJumped)
         {
             Jump();
@@ -41,20 +42,49 @@ public class RunnerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.W) && !_isDashed)
         {
-            Dash();
+            StartCoroutine(DashTest(transform.position + new Vector3(2f, 0f, 0f)));
+            //Dash();
         }
     }
 
     private void Move()
     {
-        _rigidbody.velocity = new Vector3(Input.GetAxis("Horizontal"), 0f, 0f) * moveSpeed;
+        _rigidbody.velocity = new Vector3(Input.GetAxis("Horizontal") * _horizontalSpeed, _rigidbody.velocity.y, 0f);
     }
 
     private void Jump()
     {
-        var jumpVelocity = _rigidbody.velocity + new Vector3(0f, jumpSpeed, 0f);
-        _rigidbody.velocity = jumpVelocity;
+        _rigidbody.velocity += new Vector3(0f, jumpSpeed, 0f);
+        _horizontalSpeed = airSpeed;
         _isJumped = true;
+    }
+
+    private IEnumerator DashTest(Vector3 endPos)
+    {
+        var startTime = Time.time;
+        var startScale = new Vector3(0.25f, 0.25f, 0.25f);
+        var endScale = Vector3.zero;
+        float duration = 0.1f;
+        
+        while (Time.time < startTime + duration)
+        {
+            transform.localScale = Vector3.Lerp(startScale, endScale, ((Time.time - startTime)/duration));
+            yield return null;
+        }
+
+        transform.localScale = endScale;
+        
+        transform.position = endPos;
+        _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0f, 0f);
+        
+        startTime = Time.time;
+        while (Time.time < startTime + duration)
+        {
+            transform.localScale = Vector3.Lerp(endScale, startScale, ((Time.time - startTime)/duration));
+            yield return null;
+        }
+        
+        transform.localScale = startScale;
     }
 
     private void Dash()
@@ -70,6 +100,12 @@ public class RunnerController : MonoBehaviour
         {
             _isJumped = false;
             _isDashed = false;
+            _horizontalSpeed = moveSpeed;
+        }
+        
+        if (other.gameObject.CompareTag("Obstacle"))
+        {
+           SceneManager.LoadScene("SampleScene"); 
         }
     }
 }

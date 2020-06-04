@@ -5,19 +5,18 @@ using UnityEngine;
 public class PathSpawner : MonoBehaviour
 {
     private bool _didWaitForSpawn;
-    private GameObject _pathPrefab;
-
+    
+    [SerializeField] private List<GameObject> pathPrefabs;
     [SerializeField] private float waitForSpawnDuration = 1.0f;
     
     // Start is called before the first frame update
     void Start()
     {
         _didWaitForSpawn = true;
-        _pathPrefab = Resources.Load<GameObject>("Prefabs/Path");
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         if (_didWaitForSpawn)
         {
@@ -27,7 +26,7 @@ public class PathSpawner : MonoBehaviour
 
     private void SpawnPath()
     {
-        var path = Instantiate(_pathPrefab, transform.position, _pathPrefab.transform.rotation);
+        var path = Instantiate(pathPrefabs[Random.Range(0,pathPrefabs.Count)], transform.position, pathPrefabs[Random.Range(0,pathPrefabs.Count)].transform.rotation);
         StartCoroutine(WaitForSpawn());
     }
 

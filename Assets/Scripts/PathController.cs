@@ -25,7 +25,7 @@ public class PathController : MonoBehaviour
     private IEnumerator Move()
     {
         var startTime = Time.time;
-        float duration = _startPos.x - _endPos.x;
+        float duration = (_startPos.x - _endPos.x)/4;
         
         while (Time.time < startTime + duration)
         {
