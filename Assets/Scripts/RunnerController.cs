@@ -54,7 +54,16 @@ public class RunnerController : MonoBehaviour
 
     private void Jump()
     {
-        _rigidbody.velocity += new Vector3(0f, jumpSpeed, 0f);
+        GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Sounds/Jump"));
+        if (GameManager.IsGravityReversed)
+        {
+            _rigidbody.velocity += new Vector3(0f, -jumpSpeed, 0f);
+        }
+        else
+        {
+            _rigidbody.velocity += new Vector3(0f, jumpSpeed, 0f);
+        }
+        
         _horizontalSpeed = airSpeed;
         _isJumped = true;
     }
@@ -65,7 +74,8 @@ public class RunnerController : MonoBehaviour
         var startScale = new Vector3(0.25f, 0.25f, 0.25f);
         var endScale = Vector3.zero;
         float duration = 0.1f;
-        
+        GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Sounds/Dash"));
+
         while (Time.time < startTime + duration)
         {
             transform.localScale = Vector3.Lerp(startScale, endScale, ((Time.time - startTime)/duration));
@@ -105,7 +115,8 @@ public class RunnerController : MonoBehaviour
         
         if (other.gameObject.CompareTag("Obstacle"))
         {
-           SceneManager.LoadScene("SampleScene"); 
+            GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Sounds/Hit_Hurt"));
+            SceneManager.LoadScene("SampleScene"); 
         }
     }
 }
