@@ -3,18 +3,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class RunnerController : MonoBehaviour
 {
     private Rigidbody _rigidbody;
     private bool _isJumped;
     private bool _isDashed;
+    private bool _isDashOnCooldown;
     private float _horizontalSpeed;
     
     [SerializeField] private float moveSpeed = 3.0f;
     [SerializeField] private float airSpeed = 0.5f;
     [SerializeField] private float jumpSpeed = 1.0f;
     [SerializeField] private float dashSpeed = 3.0f;
+    [SerializeField] private float dashCooldownDuration = 5.0f;
+    [SerializeField] private GameObject dashCooldownImage;
     
     // Start is called before the first frame update
     void Start()
@@ -22,15 +26,10 @@ public class RunnerController : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
         _isJumped = false;
         _isDashed = false;
+        _isDashOnCooldown = false;
         _horizontalSpeed = moveSpeed;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
+    
     private void FixedUpdate()
     {
         Move();
@@ -40,10 +39,9 @@ public class RunnerController : MonoBehaviour
             Jump();
         }
 
-        if (Input.GetKeyDown(KeyCode.W) && !_isDashed)
+        if (Input.GetKeyDown(KeyCode.W) && !_isDashed && !_isDashOnCooldown)
         {
-            StartCoroutine(DashTest(transform.position + new Vector3(2f, 0f, 0f)));
-            //Dash();
+            StartCoroutine(Dash());
         }
     }
 
@@ -68,42 +66,32 @@ public class RunnerController : MonoBehaviour
         _isJumped = true;
     }
 
-    private IEnumerator DashTest(Vector3 endPos)
+    private IEnumerator Dash()
     {
-        var startTime = Time.time;
-        var startScale = new Vector3(0.25f, 0.25f, 0.25f);
-        var endScale = Vector3.zero;
+        StartCoroutine(SetDashCooldown());
+        var originalScale = transform.localScale;
+        var endPos = transform.position + new Vector3(2.0f, 0f, 0f);
         float duration = 0.1f;
-        GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Sounds/Dash"));
-
-        while (Time.time < startTime + duration)
-        {
-            transform.localScale = Vector3.Lerp(startScale, endScale, ((Time.time - startTime)/duration));
-            yield return null;
-        }
-
-        transform.localScale = endScale;
         
+        GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Sounds/Dash"));
+        yield return AnimationManager.Scale(this.gameObject, originalScale, Vector3.zero, duration);
         transform.position = endPos;
         _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0f, 0f);
-        
-        startTime = Time.time;
-        while (Time.time < startTime + duration)
+        yield return AnimationManager.Scale(this.gameObject, transform.localScale, originalScale, duration);
+    }
+
+    private IEnumerator SetDashCooldown()
+    {
+        _isDashOnCooldown = true;
+        var startTime = Time.time;
+        while (Time.time < startTime + dashCooldownDuration)
         {
-            transform.localScale = Vector3.Lerp(endScale, startScale, ((Time.time - startTime)/duration));
+            dashCooldownImage.GetComponent<Image>().fillAmount = (Time.time - startTime) / dashCooldownDuration;
             yield return null;
         }
-        
-        transform.localScale = startScale;
+        _isDashOnCooldown = false;
     }
-
-    private void Dash()
-    {
-        var dashVelocity = new Vector3(dashSpeed, 0f, 0f);
-        _rigidbody.velocity = dashVelocity;
-        _isDashed = true;
-    }
-
+    
     private void OnCollisionEnter(Collision other)
     {
         if (other.gameObject.CompareTag("Ground"))
@@ -113,10 +101,19 @@ public class RunnerController : MonoBehaviour
             _horizontalSpeed = moveSpeed;
         }
         
-        if (other.gameObject.CompareTag("Obstacle"))
+        if (other.gameObject.CompareTag("Death"))
         {
             GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Sounds/Hit_Hurt"));
-            SceneManager.LoadScene("SampleScene"); 
+            SceneManager.LoadScene("MainScene"); 
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Death"))
+        {
+            GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Sounds/Hit_Hurt"));
+            SceneManager.LoadScene("MainScene");
         }
     }
 }

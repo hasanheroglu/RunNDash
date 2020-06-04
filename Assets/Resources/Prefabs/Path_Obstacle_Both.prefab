@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5545317224118819009}
   m_Layer: 0
   m_Name: Obstacle_Up
-  m_TagString: Obstacle
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -107,7 +107,7 @@ GameObject:
   - component: {fileID: 5545317224849051970}
   m_Layer: 0
   m_Name: Path_Obstacle_Both
-  m_TagString: Untagged
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -154,7 +154,7 @@ GameObject:
   - component: {fileID: 5545317225388678351}
   m_Layer: 0
   m_Name: Obstacle_Down
-  m_TagString: Obstacle
+  m_TagString: Death
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
